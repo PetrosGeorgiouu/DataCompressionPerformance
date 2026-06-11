@@ -44,7 +44,7 @@ void printCodes(Node *root, string str,
   printCodes(root->right, str + "1", huffmanCode);
 }
 
-void buildHuffmanTreeNaive(string text, unordered_map<char, int> freq)
+unordered_map<char, string> buildHuffmanTreeNaive(string text, unordered_map<char, int> freq)
 {
 
   priority_queue<Node *, vector<Node *>, compare> pq;
@@ -66,42 +66,39 @@ void buildHuffmanTreeNaive(string text, unordered_map<char, int> freq)
   unordered_map<char, string> huffmanCode;
   printCodes(root, "", huffmanCode);
 
-  cout << "Huffman Codes:\n";
-  for (auto pair : huffmanCode)
-  {
-    cout << pair.first << " " << pair.second << "\n";
-  }
-  cout << "\nOriginal string:\n"
-       << text << "\n";
+  return huffmanCode;
+  // auto decode = [&](string str)
+  // {
+  //   cout << "\nDecoded string:\n";
+  //   Node *curr = root;
+  //   for (char bit : str)
+  //   {
+  //     if (bit == '0')
+  //     {
+  //       curr = curr->left;
+  //     }
+  //     else
+  //     {
+  //       curr = curr->right;
+  //     }
+  //     if (!curr->left && !curr->right)
+  //     {
+  //       cout << curr->ch;
+  //       curr = root;
+  //     }
+  //   }
+  //   cout << "\n";
+  // };
+
+  // decode(str);
+}
+
+string encode(string txt, unordered_map<char, string> huffmanCode)
+{
   string str = "";
-  for (char ch : text)
+  for (char ch : txt)
   {
     str += huffmanCode[ch];
   }
-  cout << "\nEncoded string:\n"
-       << str << "\n";
-  auto decode = [&](string str)
-  {
-    cout << "\nDecoded string:\n";
-    Node *curr = root;
-    for (char bit : str)
-    {
-      if (bit == '0')
-      {
-        curr = curr->left;
-      }
-      else
-      {
-        curr = curr->right;
-      }
-      if (!curr->left && !curr->right)
-      {
-        cout << curr->ch;
-        curr = root;
-      }
-    }
-    cout << "\n";
-  };
-
-  decode(str);
+  return str;
 }
