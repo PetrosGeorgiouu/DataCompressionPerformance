@@ -2,6 +2,7 @@
 #include <queue>
 #include <unordered_map>
 #include <vector>
+#include <cstdint>
 #include <stack>
 #include "huffman/HuffmanTree.hpp"
 using namespace std;
@@ -48,8 +49,8 @@ HuffmanTreeNaive::HuffmanTreeNaive(unordered_map<char, uint64_t> &freqs)
     pq.pop();
     Node *right = pq.top();
     pq.pop();
-    int sum = left->freq + right->freq;
-    pq.push(new Node('\0', sum, left, right));
+    uint64_t sum = left->freq + right->freq;
+    pq.push(new Node{'\0', sum, left, right});
   }
   this->root = pq.top();
 }
