@@ -3,7 +3,27 @@ A data compression library for compressing/decompressing text files. Compares a 
 
 # How to run
 
-For now, my goal is to focus on a base implementation to enforce functionality. The huff.cpp file runs on a fixed .txt file hard coded into the file to test correctness and performance. Run 'make build' to create the executable, along with the directorty to organize them. Then use 'make run' to actually run it. Once done, use 'make clean' to clear the directory for wasted space. When 'make run' is ran, it compiles the time it took for each step to complete along with corresponding throughput.
+For now, the goal is to develop a basic implementation that establishes correct functionality. The `huff.cpp` program processes a fixed `.txt` file whose path is currently hard-coded for correctness and performance testing.
+
+Build the executable and create the directory used to store it:
+
+```bash
+make build
+```
+
+Run the executable:
+
+```bash
+make run
+```
+
+The program reports the execution time and corresponding throughput for each stage.
+
+After testing, remove the generated build directory and its contents:
+
+```bash
+make clean
+```
 
 # How I Improved Performance
 
