@@ -54,6 +54,7 @@ void printStageReport(
 
 int main()
 {
+     // test comment for make
      const std::string filePath =
          "data/corpus/complete_project_gutenberg_works_of_george_meredith.txt";
 
