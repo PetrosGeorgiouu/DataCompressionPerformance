@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
-#include <stack>
 #include "huffman/HuffmanTree.hpp"
 using namespace std;
 
