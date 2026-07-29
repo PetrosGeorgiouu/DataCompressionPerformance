@@ -19,6 +19,12 @@ make run
 
 The program reports the execution time and corresponding throughput for each stage.
 
+You can also run its test cases with:
+
+```bash
+make tests
+```
+
 After testing, remove the generated build directory and its contents:
 
 ```bash
