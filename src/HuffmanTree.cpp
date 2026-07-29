@@ -33,6 +33,16 @@ HuffmanTreeNaive::HuffmanTreeNaive(unordered_map<char, uint64_t> &freqs)
     }
     return left->tieBreak > right->tieBreak;
   };
+  if (freqs.size() == 0) {
+    this -> root = nullptr;
+    return;
+  }
+  if (freqs.size() == 1) {
+    for (auto pair : freqs) {
+      this->root = new Node(pair.first, pair.second);
+    }
+    return;
+  }
   priority_queue<Node *, vector<Node *>, decltype(compare)>
       pq(compare);
   for (auto pair : freqs)
@@ -82,7 +92,14 @@ void HuffmanTreeNaive::deleteHelper(Node *node)
 unordered_map<char, string> HuffmanTreeNaive::getEncodings()
 {
   unordered_map<char, string> encodingTable;
-  getEncodingsHelper(this->root, "", encodingTable);
+  if (this -> root == nullptr) {
+    return encodingTable;
+  }
+  if (this -> root->left == nullptr && this -> root->right == nullptr) {
+    encodingTable[this->root->ch] = "0";
+  } else {
+    getEncodingsHelper(this->root, "", encodingTable);
+  }
   return encodingTable;
 }
 
