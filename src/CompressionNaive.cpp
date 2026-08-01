@@ -10,7 +10,7 @@ using namespace std;
 
 void compressorNaive(const string &txtPath) {
     // output is the compressed file.
-    std::ofstream outputFile("output.huff", std::ios::binary);
+    std::ofstream outputFile("output" + txtPath + ".huff", std::ios::binary);
 
     if (!outputFile)
     {
@@ -39,5 +39,22 @@ void compressorNaive(const string &txtPath) {
         total += kv.second;
     }
     outputFile.write(reinterpret_cast<const char*>(&total), sizeof(total));
-    
+
+    // Begin writing encoded data
+
+    ifstream file(txtPath, ios::binary);
+    char c;
+    while (file.get(c))
+    {
+        string encoded = encodings[c];
+        for (char bit : encoded) {
+            if (bit == '0') {
+                writer.writeBit(0);
+            }
+            else {
+                writer.writeBit(1);
+            }
+        }
+    }
+    writer.flush();
 }

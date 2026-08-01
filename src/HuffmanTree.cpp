@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
+#include <algorithm>
 #include "huffman/HuffmanTree.hpp"
 using namespace std;
 
@@ -10,15 +11,14 @@ struct HuffmanTreeNaive::Node
 {
   char ch;
   uint64_t freq;
-  unsigned char tieBreak;
   Node *left;
   Node *right;
   Node(char ch, uint64_t freq)
-      : ch(ch), freq(freq), tieBreak(ch), left(nullptr), right(nullptr)
+      : ch(ch), freq(freq), left(nullptr), right(nullptr)
   {
   }
   Node(char ch, uint64_t freq, Node *left, Node *right)
-      : ch(ch), freq(freq), tieBreak(ch), left(left), right(right)
+      : ch(ch), freq(freq), left(left), right(right)
   {
   }
 };
@@ -27,11 +27,7 @@ HuffmanTreeNaive::HuffmanTreeNaive(unordered_map<char, uint64_t> &freqs)
 {
   const auto compare = [](const Node *left, Node *right)
   {
-    if (left->freq != right->freq)
-    {
-      return left->freq > right->freq;
-    }
-    return left->tieBreak > right->tieBreak;
+    return left->freq > right->freq;
   };
   if (freqs.size() == 0) {
     this -> root = nullptr;
