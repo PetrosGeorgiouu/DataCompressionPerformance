@@ -4,6 +4,8 @@
 #include <queue>
 #include <unordered_map>
 #include <vector>
+#include "huffman/FrequencyTable.hpp"
+
 using namespace std;
 
 class HuffmanTreeNaive
