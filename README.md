@@ -35,6 +35,8 @@ make clean
 
 I'd also like to take some time to explain some of my optimizations and the actual statistics as to how my new model compares to the naive model.
 
+\[Soon to write about optimizing frequency counting.\]
+
 ## Acknowledgments
 
 Early versions of my Huffman Coding file were inspired by a C++ implementation done by GeeksforGeeks (https://www.geeksforgeeks.org/cpp/huffman-coding-in-cpp/?_x_tr_hist=true); I also used their tutorial to read from files using C++ (https://www.w3schools.com/cpp/cpp_files.asp).
