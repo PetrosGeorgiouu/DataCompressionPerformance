@@ -37,7 +37,9 @@ I'd also like to take some time to explain some of my optimizations and the actu
 
 We use Linux perf tools to simulate over 2000 CPU clock samples, and an obvious bottleneck occurred in our naive implementation of frequency counting. It consumed 95.1% of the sampled CPU time. In particular, we notice these major performance issues.
 
-- 32.1% of that was contributed to a hotspot that occurred due to the per byte extraction obtained using ```std::istream::get```
+- 32.1% of that was contributed to a hotspot that occurred due to the per byte extraction obtained using ```std::istream::get```, meaning that reading one character at a time became extremely expensive.
+- 12.78% of consumption was attributed to ```std::istream::sentry``` every time we used the ```get()``` call.
+- Some noticeable issues are that worth observing are those concerning caches. In particular, using an ```unordered_map<char, uint64_t>``` data structure for storing frequencies is not cache friendly, or trivial to compute. We take a ```char```, hash it, retrieve it from an arbitrary array index, and then perform pointer chasing if collisions exist. Thus, we are not leveraging our cache properly.
 
 \[Soon to write about optimizing frequency counting.\]
 
