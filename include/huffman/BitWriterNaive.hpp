@@ -10,6 +10,7 @@ class BitWriterNaive {
         explicit BitWriterNaive(ostream& output);
         ~BitWriterNaive();
         void writeBit(uint8_t bit);
+        void writeByte(uint8_t byte);
         void flush();
 
     private:

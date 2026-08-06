@@ -10,7 +10,7 @@ using namespace std;
 
 void compressorNaive(const string &txtPath) {
     // output is the compressed file.
-    std::ofstream outputFile("output" + txtPath + ".huff", std::ios::binary);
+    std::ofstream outputFile(txtPath + ".huff", std::ios::binary);
 
     if (!outputFile)
     {
@@ -26,20 +26,16 @@ void compressorNaive(const string &txtPath) {
     // Initialize Bitwriter
     BitWriterNaive writer(outputFile);
 
-    // 1. Write magic bytes 2. version number 3.frequencies 3. original size in total number of characters;
+    // 1. Write magic bytes 2. version number 3. original size in bytes 4. Serialized tree
     outputFile.write("HUFF", 4);
     const std::uint8_t version = 1;
     outputFile.write(reinterpret_cast<const char*>(&version), sizeof(version));
     uint64_t total = 0;
-    int numFreqs = freqs.size();
-    outputFile.write(reinterpret_cast<const char*>(&numFreqs), sizeof(numFreqs));
     for (const auto& kv : freqs) {
-        outputFile.write(reinterpret_cast<const char*>(&kv.first), sizeof(kv.first));
-        outputFile.write(reinterpret_cast<const char*>(&kv.second), sizeof(kv.second));
         total += kv.second;
     }
     outputFile.write(reinterpret_cast<const char*>(&total), sizeof(total));
-
+    tree.serialize(writer);
     // Begin writing encoded data
 
     ifstream file(txtPath, ios::binary);

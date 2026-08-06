@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <algorithm>
+#include "huffman/BitWriterNaive.hpp"
 #include "huffman/HuffmanTree.hpp"
 using namespace std;
 
@@ -89,17 +90,17 @@ void HuffmanTreeNaive::deleteHelper(Node *node)
   }
 }
 
-void HuffmanTreeNaive::serializeHelper(string& accumulated, Node *current) {
-  if (current != nullptr && current -> isLeaf()) {
-    accumulated += current -> ch;
-  }
-  if (current -> left != nullptr) {
-    accumulated += '0';
-    serializeHelper(accumulated, current -> left);
-  }
-  if (current -> right != nullptr) {
-    accumulated += '1';
-    serializeHelper(accumulated, current -> right);
+void HuffmanTreeNaive::serializeHelper(BitWriterNaive& bitWriter, Node *current) {
+  if (current != nullptr) {
+    if (current -> isLeaf()) {
+      bitWriter.writeBit(1);
+      bitWriter.writeByte(static_cast<std::uint8_t>(static_cast<unsigned char>(current -> ch)));
+    }
+    else {
+      bitWriter.writeBit(0);
+    }
+    serializeHelper(bitWriter, current -> left);
+    serializeHelper(bitWriter, current -> right);
   }
 }
 
@@ -117,10 +118,8 @@ unordered_map<char, string> HuffmanTreeNaive::getEncodings()
   return encodingTable;
 }
 
-string HuffmanTreeNaive::serialize() {
-  string accumulated = "";
-  serializeHelper(accumulated, this -> root);
-  return accumulated;
+void HuffmanTreeNaive::serialize(BitWriterNaive& bitWriter) {
+  serializeHelper(bitWriter, this -> root);
   
 }
 

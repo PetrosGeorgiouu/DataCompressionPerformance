@@ -4,6 +4,7 @@
 #include <queue>
 #include <unordered_map>
 #include <vector>
+#include "huffman/BitWriterNaive.hpp"
 #include "huffman/FrequencyTable.hpp"
 
 using namespace std;
@@ -20,7 +21,7 @@ public:
 
   std::unordered_map<char, std::string> getEncodings();
 
-  string serialize();
+  void serialize(BitWriterNaive& bitWriter);
 
 private:
   struct Node;
@@ -36,5 +37,5 @@ private:
 
   struct compare;
 
-  void serializeHelper(string& accumulated, Node* current);
+  void serializeHelper(BitWriterNaive& bitWriter, Node* current);
 };

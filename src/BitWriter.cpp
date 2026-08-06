@@ -25,6 +25,12 @@ void BitWriterNaive::writeBit(uint8_t bit) {
     }
 }
 
+void BitWriterNaive::writeByte(uint8_t byte) {
+    for (int i = 7; i >= 0; i--) {
+        writeBit((byte >> i) & 1);
+    }
+}
+
 void BitWriterNaive::flush() {
     if (current_size > 0) {
         for (int i = 0; i < 8 - current_size; i++) {
