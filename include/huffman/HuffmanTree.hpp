@@ -20,6 +20,8 @@ public:
 
   std::unordered_map<char, std::string> getEncodings();
 
+  string serialize();
+
 private:
   struct Node;
 
@@ -33,4 +35,6 @@ private:
   void deleteHelper(Node *node);
 
   struct compare;
+
+  void serializeHelper(string& accumulated, Node* current);
 };

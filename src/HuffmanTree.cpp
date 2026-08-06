@@ -21,6 +21,10 @@ struct HuffmanTreeNaive::Node
       : ch(ch), freq(freq), left(left), right(right)
   {
   }
+  bool isLeaf() const
+    {
+        return left == nullptr && right == nullptr;
+    }
 };
 
 HuffmanTreeNaive::HuffmanTreeNaive(unordered_map<char, uint64_t> &freqs)
@@ -85,6 +89,20 @@ void HuffmanTreeNaive::deleteHelper(Node *node)
   }
 }
 
+void HuffmanTreeNaive::serializeHelper(string& accumulated, Node *current) {
+  if (current != nullptr && current -> isLeaf()) {
+    accumulated += current -> ch;
+  }
+  if (current -> left != nullptr) {
+    accumulated += '0';
+    serializeHelper(accumulated, current -> left);
+  }
+  if (current -> right != nullptr) {
+    accumulated += '1';
+    serializeHelper(accumulated, current -> right);
+  }
+}
+
 unordered_map<char, string> HuffmanTreeNaive::getEncodings()
 {
   unordered_map<char, string> encodingTable;
@@ -97,6 +115,13 @@ unordered_map<char, string> HuffmanTreeNaive::getEncodings()
     getEncodingsHelper(this->root, "", encodingTable);
   }
   return encodingTable;
+}
+
+string HuffmanTreeNaive::serialize() {
+  string accumulated = "";
+  serializeHelper(accumulated, this -> root);
+  return accumulated;
+  
 }
 
 HuffmanTreeNaive::~HuffmanTreeNaive()
