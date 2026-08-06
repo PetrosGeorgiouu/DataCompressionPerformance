@@ -1,4 +1,4 @@
 #pragma once
 #include <ostream>
 
-void compressorNaive(std::ostream& output);
+void compressorNaive(const std::string& txtPath);

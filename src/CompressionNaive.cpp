@@ -1,20 +1,29 @@
 #include <ostream>
+#include <unordered_map>
+#include <fstream>
+#include <filesystem>
+#include <iostream>
+#include <stdexcept>
 #include "huffman/FrequencyTable.hpp"
 #include "huffman/HuffmanTree.hpp"
 #include "huffman/BitWriterNaive.hpp"
 #include "huffman/CompressionNaive.hpp"
-#include <unordered_map>
-#include <fstream>
 
 using namespace std;
 
 void compressorNaive(const string &txtPath) {
-    // output is the compressed file.
-    std::ofstream outputFile(txtPath + ".huff", std::ios::binary);
+    namespace fs = std::filesystem;
+    fs::path inputPath(txtPath);
+    fs::path outputPath = inputPath;
+    outputPath.replace_extension(".huff");
+    ofstream outputFile(outputPath, ios::binary | ios::trunc);
 
-    if (!outputFile)
-    {
-        throw std::runtime_error("Failed to open output.huff");
+    // Check if we opened the file successfully
+
+    if (!outputFile) {
+        throw runtime_error(
+            "Failed to open output file: " + outputPath.string()
+        );
     }
     
     // Find the character frequencies in the .txt file
@@ -36,8 +45,14 @@ void compressorNaive(const string &txtPath) {
     }
     outputFile.write(reinterpret_cast<const char*>(&total), sizeof(total));
     tree.serialize(writer);
-    // Begin writing encoded data
 
+    // Check if writing headerwas successful 
+
+    if (!outputFile) { 
+        throw std::runtime_error("Failed while writing Huffman header"); 
+    }
+
+    // Begin writing encoded data
     ifstream file(txtPath, ios::binary);
     char c;
     while (file.get(c))
@@ -53,4 +68,22 @@ void compressorNaive(const string &txtPath) {
         }
     }
     writer.flush();
+    outputFile.flush();
+
+    if (!outputFile) {
+        throw runtime_error(
+            "Failed while writing output file: " + outputPath.string()
+        );
+    }
+
+    outputFile.close();
+
+    if (outputFile.fail()) {
+        throw runtime_error(
+            "Failed to close output file: " + outputPath.string()
+        );
+    }
+
+    std::cout << "Compressed file created at: " << fs::absolute(outputPath) << '\n';
+
 }

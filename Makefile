@@ -11,7 +11,7 @@ CXXFLAGS := -std=c++17 \
             -Wpedantic \
             -Iinclude
 
-APP := apps/huff.cpp
+APP := apps/main.cpp
 
 SOURCES := src/FrequencyTable.cpp \
            src/HuffmanTree.cpp \
