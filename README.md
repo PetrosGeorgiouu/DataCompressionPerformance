@@ -3,7 +3,7 @@ A data compression library for compressing/decompressing text files. Compares a 
 
 # How to run
 
-For now, the goal is to develop a basic implementation that establishes correct functionality. The `main.cpp` program processes a fixed setof `.txt` files whose path is currently hard-coded for correctness and performance testing.
+For now, the goal is to develop a basic implementation that establishes correct functionality. The `main.cpp` program processes a fixed set of `.txt` files whose paths are currently hard-coded for correctness and performance testing.
 
 Build the executable and create the directory used to store it:
 
