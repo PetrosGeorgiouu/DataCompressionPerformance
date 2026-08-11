@@ -4,11 +4,11 @@
 #include <vector>
 #include <cstdint>
 #include <algorithm>
-#include "huffman/BitWriterNaive.hpp"
+#include "huffman/BitWriter.hpp"
 #include "huffman/HuffmanTree.hpp"
 using namespace std;
 
-struct HuffmanTreeNaive::Node
+struct HuffmanTree::Node
 {
   char ch;
   uint64_t freq;
@@ -23,23 +23,26 @@ struct HuffmanTreeNaive::Node
   {
   }
   bool isLeaf() const
-    {
-        return left == nullptr && right == nullptr;
-    }
+  {
+    return left == nullptr && right == nullptr;
+  }
 };
 
-HuffmanTreeNaive::HuffmanTreeNaive(unordered_map<char, uint64_t> &freqs)
+HuffmanTree::HuffmanTree(unordered_map<char, uint64_t> &freqs)
 {
   const auto compare = [](const Node *left, Node *right)
   {
     return left->freq > right->freq;
   };
-  if (freqs.size() == 0) {
-    this -> root = nullptr;
+  if (freqs.size() == 0)
+  {
+    this->root = nullptr;
     return;
   }
-  if (freqs.size() == 1) {
-    for (auto pair : freqs) {
+  if (freqs.size() == 1)
+  {
+    for (auto pair : freqs)
+    {
       this->root = new Node(pair.first, pair.second);
     }
     return;
@@ -65,8 +68,8 @@ HuffmanTreeNaive::HuffmanTreeNaive(unordered_map<char, uint64_t> &freqs)
   this->root = pq.top();
 }
 
-void HuffmanTreeNaive::getEncodingsHelper(const Node *node, string str,
-                                          unordered_map<char, string> &encodings)
+void HuffmanTree::getEncodingsHelper(const Node *node, string str,
+                                     unordered_map<char, string> &encodings)
 {
   if (node == nullptr)
     return;
@@ -80,7 +83,7 @@ void HuffmanTreeNaive::getEncodingsHelper(const Node *node, string str,
   getEncodingsHelper(node->right, str + "1", encodings);
 }
 
-void HuffmanTreeNaive::deleteHelper(Node *node)
+void HuffmanTree::deleteHelper(Node *node)
 {
   if (node != nullptr)
   {
@@ -90,40 +93,48 @@ void HuffmanTreeNaive::deleteHelper(Node *node)
   }
 }
 
-void HuffmanTreeNaive::serializeHelper(BitWriterNaive& bitWriter, Node *current) {
-  if (current != nullptr) {
-    if (current -> isLeaf()) {
+void HuffmanTree::serializeHelper(BitWriter &bitWriter, Node *current)
+{
+  if (current != nullptr)
+  {
+    if (current->isLeaf())
+    {
       bitWriter.writeBit(1);
-      bitWriter.writeByte(static_cast<std::uint8_t>(static_cast<unsigned char>(current -> ch)));
+      bitWriter.writeByte(static_cast<std::uint8_t>(static_cast<unsigned char>(current->ch)));
     }
-    else {
+    else
+    {
       bitWriter.writeBit(0);
     }
-    serializeHelper(bitWriter, current -> left);
-    serializeHelper(bitWriter, current -> right);
+    serializeHelper(bitWriter, current->left);
+    serializeHelper(bitWriter, current->right);
   }
 }
 
-unordered_map<char, string> HuffmanTreeNaive::getEncodings()
+unordered_map<char, string> HuffmanTree::getEncodings()
 {
   unordered_map<char, string> encodingTable;
-  if (this -> root == nullptr) {
+  if (this->root == nullptr)
+  {
     return encodingTable;
   }
-  if (this -> root->left == nullptr && this -> root->right == nullptr) {
+  if (this->root->left == nullptr && this->root->right == nullptr)
+  {
     encodingTable[this->root->ch] = "0";
-  } else {
+  }
+  else
+  {
     getEncodingsHelper(this->root, "", encodingTable);
   }
   return encodingTable;
 }
 
-void HuffmanTreeNaive::serialize(BitWriterNaive& bitWriter) {
-  serializeHelper(bitWriter, this -> root);
-  
+void HuffmanTree::serialize(BitWriter &bitWriter)
+{
+  serializeHelper(bitWriter, this->root);
 }
 
-HuffmanTreeNaive::~HuffmanTreeNaive()
+HuffmanTree::~HuffmanTree()
 {
   deleteHelper(this->root);
 }

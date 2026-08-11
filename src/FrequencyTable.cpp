@@ -5,7 +5,7 @@
 
 using namespace std;
 
-unordered_map<char, uint64_t> findFrequenciesNaive(const string &txtPath)
+unordered_map<char, uint64_t> findFrequencies(const string &txtPath)
 {
   ifstream file(txtPath, ios::binary);
   unordered_map<char, uint64_t> freqs;

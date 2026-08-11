@@ -1,4 +1,4 @@
-#include "huffman/CompressionNaive.hpp"
+#include "huffman/Compression.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -11,18 +11,20 @@
 
 namespace fs = std::filesystem;
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     const fs::path corpusDirectory =
         argc == 2 ? fs::path(argv[1]) : fs::path("data/corpus");
 
-    if (!fs::exists(corpusDirectory)) {
+    if (!fs::exists(corpusDirectory))
+    {
         std::cerr << "Corpus directory does not exist: "
                   << corpusDirectory << '\n';
         return 1;
     }
 
-    if (!fs::is_directory(corpusDirectory)) {
+    if (!fs::is_directory(corpusDirectory))
+    {
         std::cerr << "Corpus path is not a directory: "
                   << corpusDirectory << '\n';
         return 1;
@@ -30,18 +32,21 @@ int main(int argc, char* argv[])
 
     std::vector<fs::path> inputFiles;
 
-    for (const fs::directory_entry& entry :
-         fs::directory_iterator(corpusDirectory)) {
+    for (const fs::directory_entry &entry :
+         fs::directory_iterator(corpusDirectory))
+    {
 
         if (entry.is_regular_file() &&
-            entry.path().extension() == ".txt") {
+            entry.path().extension() == ".txt")
+        {
             inputFiles.push_back(entry.path());
         }
     }
 
     std::sort(inputFiles.begin(), inputFiles.end());
 
-    if (inputFiles.empty()) {
+    if (inputFiles.empty())
+    {
         std::cerr << "No .txt files found in: "
                   << corpusDirectory << '\n';
         return 1;
@@ -66,21 +71,25 @@ int main(int argc, char* argv[])
 
     std::cout << std::string(86, '-') << '\n';
 
-    for (const fs::path& inputPath : inputFiles) {
-        try {
+    for (const fs::path &inputPath : inputFiles)
+    {
+        try
+        {
             const std::uintmax_t originalBytes =
                 fs::file_size(inputPath);
-
-            compressorNaive(inputPath.string());
 
             fs::path outputPath = inputPath;
             outputPath.replace_extension(".huff");
 
-            if (!fs::exists(outputPath)) {
+            compressor(
+                inputPath.string(),
+                outputPath.string());
+
+            if (!fs::exists(outputPath))
+            {
                 throw std::runtime_error(
                     "Compressor did not create " +
-                    outputPath.string()
-                );
+                    outputPath.string());
             }
 
             const std::uintmax_t compressedBytes =
@@ -89,18 +98,16 @@ int main(int argc, char* argv[])
             const std::intmax_t bytesSaved =
                 compressedBytes <= originalBytes
                     ? static_cast<std::intmax_t>(
-                          originalBytes - compressedBytes
-                      )
+                          originalBytes - compressedBytes)
                     : -static_cast<std::intmax_t>(
-                          compressedBytes - originalBytes
-                      );
+                          compressedBytes - originalBytes);
 
             const long double reductionPercentage =
                 originalBytes == 0
                     ? 0.0L
                     : (1.0L -
                        static_cast<long double>(compressedBytes) /
-                       static_cast<long double>(originalBytes)) *
+                           static_cast<long double>(originalBytes)) *
                           100.0L;
 
             totalOriginalBytes += originalBytes;
@@ -120,7 +127,8 @@ int main(int argc, char* argv[])
                       << reductionPercentage
                       << "%\n";
         }
-        catch (const std::exception& error) {
+        catch (const std::exception &error)
+        {
             ++failedFiles;
 
             std::cerr << "Failed to benchmark "
@@ -129,7 +137,8 @@ int main(int argc, char* argv[])
         }
     }
 
-    if (successfulFiles == 0) {
+    if (successfulFiles == 0)
+    {
         std::cerr << "Every compression attempt failed.\n";
         return 1;
     }
@@ -137,18 +146,16 @@ int main(int argc, char* argv[])
     const std::intmax_t totalBytesSaved =
         totalCompressedBytes <= totalOriginalBytes
             ? static_cast<std::intmax_t>(
-                  totalOriginalBytes - totalCompressedBytes
-              )
+                  totalOriginalBytes - totalCompressedBytes)
             : -static_cast<std::intmax_t>(
-                  totalCompressedBytes - totalOriginalBytes
-              );
+                  totalCompressedBytes - totalOriginalBytes);
 
     const long double aggregateReductionPercentage =
         totalOriginalBytes == 0
             ? 0.0L
             : (1.0L -
                static_cast<long double>(totalCompressedBytes) /
-               static_cast<long double>(totalOriginalBytes)) *
+                   static_cast<long double>(totalOriginalBytes)) *
                   100.0L;
 
     const long double averageFileReductionPercentage =

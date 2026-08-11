@@ -4,24 +4,24 @@
 #include <queue>
 #include <unordered_map>
 #include <vector>
-#include "huffman/BitWriterNaive.hpp"
+#include "huffman/BitWriter.hpp"
 #include "huffman/FrequencyTable.hpp"
 
 using namespace std;
 
-class HuffmanTreeNaive
+class HuffmanTree
 {
 public:
-  explicit HuffmanTreeNaive(std::unordered_map<char, uint64_t> &freqs);
+  explicit HuffmanTree(std::unordered_map<char, uint64_t> &freqs);
 
-  ~HuffmanTreeNaive();
+  ~HuffmanTree();
 
-  HuffmanTreeNaive(const HuffmanTreeNaive &) = delete;
-  HuffmanTreeNaive &operator=(const HuffmanTreeNaive &) = delete;
+  HuffmanTree(const HuffmanTree &) = delete;
+  HuffmanTree &operator=(const HuffmanTree &) = delete;
 
   std::unordered_map<char, std::string> getEncodings();
 
-  void serialize(BitWriterNaive& bitWriter);
+  void serialize(BitWriter &bitWriter);
 
 private:
   struct Node;
@@ -37,5 +37,5 @@ private:
 
   struct compare;
 
-  void serializeHelper(BitWriterNaive& bitWriter, Node* current);
+  void serializeHelper(BitWriter &bitWriter, Node *current);
 };
