@@ -27,10 +27,13 @@ FILE ?=
 CORPUS_DIR ?= data/corpus
 BENCH_ARGS ?=
 
+BENCHMARK_INCLUDE := $(HOME)/benchmark/include
+BENCHMARK_LIB := $(HOME)/benchmark/build-release/src/libbenchmark.a
+
 build/fileperf: apps/fileperf.cpp $(SOURCES) $(HEADERS)
 	mkdir -p build
-	$(CXX) $(CXXFLAGS) apps/fileperf.cpp $(SOURCES) \
-		-lbenchmark -lpthread \
+	$(CXX) $(CXXFLAGS) -I$(BENCHMARK_INCLUDE) apps/fileperf.cpp $(SOURCES) \
+		$(BENCHMARK_LIB) -lpthread \
 		-o build/fileperf
 
 build/corpus: apps/corpus.cpp $(SOURCES) $(HEADERS)

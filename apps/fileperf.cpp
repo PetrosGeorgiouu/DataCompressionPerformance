@@ -47,6 +47,8 @@ int main(int argc, char **argv)
   //
   // Remove it before Google Benchmark parses its own arguments.
 
+  benchmark::MaybeReenterWithoutASLR(argc, argv);
+
   if (argc < 2)
   {
     std::cerr
