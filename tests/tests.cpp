@@ -1,5 +1,5 @@
-
 #include <cstdint>
+#include <cstring>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "huffman/BitWriter.hpp"
+#include "huffman/Compression.hpp"
 #include "huffman/FrequencyTable.hpp"
 #include "huffman/HuffmanTree.hpp"
 
@@ -173,9 +174,10 @@ namespace
         return findFrequencies(filename.string());
     }
 
-    std::vector<uint8_t> writeBits(
+    template <typename WriteFunction>
+    std::vector<uint8_t> writeWithBitWriter(
         const std::string &testName,
-        const std::vector<uint8_t> &bits)
+        WriteFunction &&writeFunction)
     {
         const fs::path filename{
             TEST_OUTPUT_DIRECTORY / (testName + ".bin")};
@@ -190,16 +192,90 @@ namespace
                 "Could not create BitWriter output file");
 
             BitWriter writer{output};
-
-            for (uint8_t bit : bits)
-            {
-                writer.writeBit(bit);
-            }
-
+            writeFunction(writer);
             writer.flush();
         }
 
         return readFileBytes(filename);
+    }
+
+    std::vector<uint8_t> writeBits(
+        const std::string &testName,
+        const std::vector<uint8_t> &bits)
+    {
+        return writeWithBitWriter(
+            testName,
+            [&bits](BitWriter &writer)
+            {
+                for (uint8_t bit : bits)
+                {
+                    writer.writeBit(bit);
+                }
+            });
+    }
+
+    std::vector<uint8_t> serializeTree(
+        const std::string &testName,
+        std::unordered_map<char, uint64_t> frequencies)
+    {
+        return writeWithBitWriter(
+            testName,
+            [&frequencies](BitWriter &writer)
+            {
+                HuffmanTree tree{frequencies};
+                tree.serialize(writer);
+            });
+    }
+
+    uint64_t readNativeUint64(
+        const std::vector<uint8_t> &bytes,
+        std::size_t offset)
+    {
+        expect(
+            bytes.size() >= offset + sizeof(uint64_t),
+            "Not enough bytes to read uint64_t field");
+
+        uint64_t value{0};
+        std::memcpy(&value, bytes.data() + offset, sizeof(value));
+        return value;
+    }
+
+    void expectCompressionHeader(
+        const std::vector<uint8_t> &bytes,
+        uint64_t expectedOriginalSize)
+    {
+        constexpr std::size_t headerSize{
+            4 + sizeof(uint8_t) + sizeof(uint64_t)};
+
+        expect(
+            bytes.size() >= headerSize,
+            "Compressed output is smaller than the fixed header");
+
+        expectEqual(bytes[0], uint8_t{'H'}, "Missing H in HUFF magic bytes");
+        expectEqual(bytes[1], uint8_t{'U'}, "Missing U in HUFF magic bytes");
+        expectEqual(bytes[2], uint8_t{'F'}, "Missing first F in HUFF magic bytes");
+        expectEqual(bytes[3], uint8_t{'F'}, "Missing second F in HUFF magic bytes");
+        expectEqual(bytes[4], uint8_t{1}, "Unexpected compressor format version");
+
+        expectEqual(
+            readNativeUint64(bytes, 5),
+            expectedOriginalSize,
+            "Original-size field in compressed header is incorrect");
+    }
+
+    std::vector<uint8_t> compressContents(
+        const std::string &testName,
+        const std::string &contents)
+    {
+        const fs::path inputPath{
+            TEST_OUTPUT_DIRECTORY / (testName + ".txt")};
+        const fs::path outputPath{
+            TEST_OUTPUT_DIRECTORY / (testName + ".huff")};
+
+        writeTestFile(inputPath, contents);
+        compressor(inputPath.string(), outputPath.string());
+
+        return readFileBytes(outputPath);
     }
 
     // -----------------------------------------------------------------------------
@@ -624,6 +700,66 @@ namespace
     }
 
     // -----------------------------------------------------------------------------
+    // Huffman-serialization tests
+    // -----------------------------------------------------------------------------
+
+    TestSuite runHuffmanSerializationTests()
+    {
+        TestSuite suite{"Huffman Serialization"};
+
+        std::cout << "\n=== Huffman Serialization ===\n";
+
+        suite.run("empty tree serializes to no bytes", []
+                  {
+        std::unordered_map<char, uint64_t> frequencies;
+
+        const auto bytes{
+            serializeTree("serialize_empty", frequencies)
+        };
+
+        expect(
+            bytes.empty(),
+            "Expected an empty Huffman tree to serialize to no bytes"
+        ); });
+
+        suite.run("single leaf writes marker followed by unaligned character byte", []
+                  {
+        std::unordered_map<char, uint64_t> frequencies{
+            {'a', 3}
+        };
+
+        const auto bytes{
+            serializeTree("serialize_single_leaf", frequencies)
+        };
+
+        expectEqual(
+            bytes,
+            std::vector<uint8_t>{0xB0, 0x80},
+            "Expected serialized bits 1|01100001, padded to B0 80"
+        ); });
+
+        suite.run("two-leaf tree serializes in preorder", []
+                  {
+        std::unordered_map<char, uint64_t> frequencies{
+            {'a', 1},
+            {'b', 2}
+        };
+
+        const auto bytes{
+            serializeTree("serialize_two_leaf", frequencies)
+        };
+
+        expectEqual(
+            bytes,
+            std::vector<uint8_t>{0x58, 0x6C, 0x40},
+            "Expected preorder serialization 0|1a|1b"
+        ); });
+
+        suite.printSummary();
+        return suite;
+    }
+
+    // -----------------------------------------------------------------------------
     // BitWriter tests
     // -----------------------------------------------------------------------------
 
@@ -740,6 +876,186 @@ namespace
             "Expected bytes 0xAA and 0x80"
         ); });
 
+        suite.run("aligned writeByte writes the byte unchanged", []
+                  {
+        const auto bytes{
+            writeWithBitWriter(
+                "bitwriter_aligned_byte",
+                [](BitWriter &writer)
+                {
+                    writer.writeByte(0xA5);
+                }
+            )
+        };
+
+        expectEqual(
+            bytes,
+            std::vector<uint8_t>{0xA5},
+            "Expected aligned byte 0xA5"
+        ); });
+
+        suite.run("writeByte works after one pending bit", []
+                  {
+        const auto bytes{
+            writeWithBitWriter(
+                "bitwriter_unaligned_one_bit",
+                [](BitWriter &writer)
+                {
+                    writer.writeBit(1);
+                    writer.writeByte(0x61);
+                }
+            )
+        };
+
+        expectEqual(
+            bytes,
+            std::vector<uint8_t>{0xB0, 0x80},
+            "Expected bit stream 1|01100001 to cross the byte boundary correctly"
+        ); });
+
+        suite.run("writeByte works after three pending bits", []
+                  {
+        const auto bytes{
+            writeWithBitWriter(
+                "bitwriter_unaligned_three_bits",
+                [](BitWriter &writer)
+                {
+                    writer.writeBit(1);
+                    writer.writeBit(0);
+                    writer.writeBit(1);
+                    writer.writeByte(0xA5);
+                }
+            )
+        };
+
+        expectEqual(
+            bytes,
+            std::vector<uint8_t>{0xB4, 0xA0},
+            "Expected bit stream 101|10100101 to remain contiguous"
+        ); });
+
+        suite.run("bit writes continue at the correct offset after writeByte", []
+                  {
+        const auto bytes{
+            writeWithBitWriter(
+                "bitwriter_unaligned_then_bit",
+                [](BitWriter &writer)
+                {
+                    writer.writeBit(1);
+                    writer.writeByte(0x00);
+                    writer.writeBit(1);
+                }
+            )
+        };
+
+        expectEqual(
+            bytes,
+            std::vector<uint8_t>{0x80, 0x40},
+            "Expected trailing bit to follow the unaligned byte without a gap"
+        ); });
+
+        suite.run("multiple bytes can be written while unaligned", []
+                  {
+        const auto bytes{
+            writeWithBitWriter(
+                "bitwriter_multiple_unaligned_bytes",
+                [](BitWriter &writer)
+                {
+                    writer.writeBit(1);
+                    writer.writeBit(0);
+                    writer.writeBit(1);
+                    writer.writeByte(0xF0);
+                    writer.writeByte(0x0F);
+                }
+            )
+        };
+
+        expectEqual(
+            bytes,
+            std::vector<uint8_t>{0xBE, 0x01, 0xE0},
+            "Expected consecutive unaligned bytes to preserve every bit"
+        ); });
+
+        suite.printSummary();
+        return suite;
+    }
+
+    // -----------------------------------------------------------------------------
+    // Compressor tests
+    // -----------------------------------------------------------------------------
+
+    TestSuite runCompressorTests()
+    {
+        TestSuite suite{"Compressor"};
+
+        std::cout << "\n=== Compressor ===\n";
+
+        suite.run("empty input writes only the fixed header", []
+                  {
+        const auto bytes{
+            compressContents("compress_empty", "")
+        };
+
+        expectCompressionHeader(bytes, 0);
+
+        expectEqual(
+            bytes.size(),
+            std::size_t{4 + sizeof(uint8_t) + sizeof(uint64_t)},
+            "Empty input should have no serialized tree or encoded payload"
+        ); });
+
+        suite.run("single-symbol input writes header tree and payload", []
+                  {
+        const auto bytes{
+            compressContents("compress_single_symbol", "aaa")
+        };
+
+        expectCompressionHeader(bytes, 3);
+
+        const std::vector<uint8_t> body{
+            bytes.begin() + static_cast<std::ptrdiff_t>(
+                4 + sizeof(uint8_t) + sizeof(uint64_t)),
+            bytes.end()
+        };
+
+        expectEqual(
+            body,
+            std::vector<uint8_t>{0xB0, 0x80},
+            "Expected serialized leaf 1|a followed by three 0 payload bits"
+        ); });
+
+        suite.run("two-symbol input keeps serialized tree and payload contiguous", []
+                  {
+        const auto bytes{
+            compressContents("compress_two_symbols", "abb")
+        };
+
+        expectCompressionHeader(bytes, 3);
+
+        const std::vector<uint8_t> body{
+            bytes.begin() + static_cast<std::ptrdiff_t>(
+                4 + sizeof(uint8_t) + sizeof(uint64_t)),
+            bytes.end()
+        };
+
+        expectEqual(
+            body,
+            std::vector<uint8_t>{0x58, 0x6C, 0x4C},
+            "Expected preorder tree 0|1a|1b followed immediately by payload 011"
+        ); });
+
+        suite.run("compressor records the exact original byte count", []
+                  {
+        const std::string contents{"a\n b\t!"};
+        const auto bytes{
+            compressContents("compress_original_size", contents)
+        };
+
+        expectCompressionHeader(
+            bytes,
+            static_cast<uint64_t>(contents.size())
+        ); });
+
         suite.printSummary();
         return suite;
     }
@@ -777,14 +1093,28 @@ int main()
     const TestSuite huffmanSuite{
         runHuffmanEncodingTests()};
 
+    const TestSuite serializationSuite{
+        runHuffmanSerializationTests()};
+
     const TestSuite bitWriterSuite{
         runBitWriterTests()};
 
+    const TestSuite compressorSuite{
+        runCompressorTests()};
+
     const std::size_t totalPassed{
-        frequencySuite.passed() + huffmanSuite.passed() + bitWriterSuite.passed()};
+        frequencySuite.passed() +
+        huffmanSuite.passed() +
+        serializationSuite.passed() +
+        bitWriterSuite.passed() +
+        compressorSuite.passed()};
 
     const std::size_t totalTests{
-        frequencySuite.total() + huffmanSuite.total() + bitWriterSuite.total()};
+        frequencySuite.total() +
+        huffmanSuite.total() +
+        serializationSuite.total() +
+        bitWriterSuite.total() +
+        compressorSuite.total()};
 
     std::cout
         << "\n============================================\n"
