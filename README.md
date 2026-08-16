@@ -87,7 +87,7 @@ You can reference this as
 
 First, let's discuss a constant baseline template for how we will measure if performance actually improved. I use the make command listed above to calculate the latencies on each run.
 
-This is our official, first implementation report on the latencies found.
+This is our official, first implementation report on the statistics found.
 
 | Metric | Result |
 |---|---:|
@@ -101,6 +101,10 @@ This is our official, first implementation report on the latencies found.
 | Median throughput | **17.750 MiB/s** |
 | Mean throughput | **17.802 MiB/s** |
 | Peak observed throughput | **18.312 MiB/s** |
+
+### Current Results
+
+We use this to measure the results of statistics based on the most recent change made. I'll include what we changed most recently also.
 
 ## Acknowledgments
 
