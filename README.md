@@ -106,6 +106,23 @@ This is our official, first implementation report on the statistics found.
 
 We use this to measure the results of statistics based on the most recent change made. I'll include what we changed most recently also.
 
+- August 16th, 2026: frequencyCounter now returns the table as a array<uint64_t, 256> data type. Here is the current performance result.
+
+| Metric | Result |
+|---|---:|
+| Median wall-clock latency | **768.668 ms** |
+| Mean wall-clock latency | **770.665 ms** |
+| Best observed latency | **762.111 ms** |
+| Standard deviation | **7.706 ms** |
+| Coefficient of variation | **1.00%** |
+| Median CPU time | **765.691 ms** |
+| Mean CPU time | **768.240 ms** |
+| Median throughput | **18.558 MiB/s** |
+| Mean throughput | **18.512 MiB/s** |
+| Peak observed throughput | **18.718 MiB/s** |
+
+- 
+
 ## Acknowledgments
 
 Early versions of my Huffman Coding file were inspired by a C++ implementation done by GeeksforGeeks (https://www.geeksforgeeks.org/cpp/huffman-coding-in-cpp/?_x_tr_hist=true); I also used their tutorial to read from files using C++ (https://www.w3schools.com/cpp/cpp_files.asp).

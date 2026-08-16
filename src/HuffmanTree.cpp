@@ -2,6 +2,7 @@
 #include <queue>
 #include <unordered_map>
 #include <vector>
+#include <array>
 #include <cstdint>
 #include <algorithm>
 #include "huffman/BitWriter.hpp"
@@ -28,33 +29,31 @@ struct HuffmanTree::Node
   }
 };
 
-HuffmanTree::HuffmanTree(unordered_map<char, uint64_t> &freqs)
+HuffmanTree::HuffmanTree(array <uint64_t, 256> &freqs)
 {
   const auto compare = [](const Node *left, Node *right)
   {
     return left->freq > right->freq;
   };
-  if (freqs.size() == 0)
+
+  priority_queue<Node *, vector<Node *>, decltype(compare)>
+      pq(compare);
+  int numChars = 0;
+  for (int i = 0; i < 256; i++)
   {
+    if (freqs[i] > 0)
+    {
+      pq.push(new Node(static_cast<char>(i), freqs[i]));
+      numChars++;
+    }
+  }
+  if (!numChars) {
     this->root = nullptr;
     return;
   }
-  if (freqs.size() == 1)
-  {
-    for (auto pair : freqs)
-    {
-      this->root = new Node(pair.first, pair.second);
-    }
+  if (numChars == 1) {
+    this->root = pq.top();
     return;
-  }
-  priority_queue<Node *, vector<Node *>, decltype(compare)>
-      pq(compare);
-  for (auto pair : freqs)
-  {
-    if (pair.second > 0)
-    {
-      pq.push(new Node(pair.first, pair.second));
-    }
   }
   while (pq.size() != 1)
   {

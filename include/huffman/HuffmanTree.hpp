@@ -2,8 +2,9 @@
 
 #include <iostream>
 #include <queue>
-#include <unordered_map>
+#include <array>
 #include <vector>
+#include <unordered_map>
 #include "huffman/BitWriter.hpp"
 #include "huffman/FrequencyTable.hpp"
 
@@ -12,14 +13,14 @@ using namespace std;
 class HuffmanTree
 {
 public:
-  explicit HuffmanTree(std::unordered_map<char, uint64_t> &freqs);
+  explicit HuffmanTree(array <uint64_t, 256> &freqs);
 
   ~HuffmanTree();
 
   HuffmanTree(const HuffmanTree &) = delete;
   HuffmanTree &operator=(const HuffmanTree &) = delete;
 
-  std::unordered_map<char, std::string> getEncodings();
+  unordered_map<char, string> getEncodings();
 
   void serialize(BitWriter &bitWriter);
 
@@ -30,8 +31,8 @@ private:
 
   void getEncodingsHelper(
       const Node *node,
-      std::string code,
-      std::unordered_map<char, std::string> &encodings);
+      string code,
+      unordered_map<char, string> &encodings);
 
   void deleteHelper(Node *node);
 

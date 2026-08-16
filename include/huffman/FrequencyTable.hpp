@@ -2,8 +2,8 @@
 
 #include <cstdint>
 #include <string>
-#include <unordered_map>
+#include <array>
 
 using namespace std;
 
-unordered_map<char, uint64_t> findFrequencies(const string &txtPath);
+array <uint64_t, 256> findFrequencies(const string &txtPath);

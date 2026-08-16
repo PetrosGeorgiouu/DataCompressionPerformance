@@ -1,3 +1,4 @@
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <exception>
@@ -162,7 +163,7 @@ namespace
         return bytes;
     }
 
-    std::unordered_map<char, uint64_t> countFrequencies(
+    std::array<uint64_t, 256> countFrequencies(
         const std::string &testName,
         const std::string &contents)
     {
@@ -172,6 +173,29 @@ namespace
         writeTestFile(filename, contents);
 
         return findFrequencies(filename.string());
+    }
+
+    std::size_t countNonZeroFrequencies(
+        const std::array<uint64_t, 256> &frequencies)
+    {
+        std::size_t count{0};
+
+        for (uint64_t frequency : frequencies)
+        {
+            if (frequency != 0)
+            {
+                ++count;
+            }
+        }
+
+        return count;
+    }
+
+    uint64_t frequencyOf(
+        const std::array<uint64_t, 256> &frequencies,
+        unsigned char character)
+    {
+        return frequencies[static_cast<std::size_t>(character)];
     }
 
     template <typename WriteFunction>
@@ -216,7 +240,7 @@ namespace
 
     std::vector<uint8_t> serializeTree(
         const std::string &testName,
-        std::unordered_map<char, uint64_t> frequencies)
+        std::array<uint64_t, 256> frequencies)
     {
         return writeWithBitWriter(
             testName,
@@ -332,15 +356,16 @@ namespace
         return true;
     }
 
-    std::unordered_map<char, uint64_t> classicFrequencies()
+    std::array<uint64_t, 256> classicFrequencies()
     {
-        return {
-            {'a', 45},
-            {'b', 13},
-            {'c', 12},
-            {'d', 16},
-            {'e', 9},
-            {'f', 5}};
+        std::array<uint64_t, 256> frequencies{};
+        frequencies[static_cast<unsigned char>('a')] = 45;
+        frequencies[static_cast<unsigned char>('b')] = 13;
+        frequencies[static_cast<unsigned char>('c')] = 12;
+        frequencies[static_cast<unsigned char>('d')] = 16;
+        frequencies[static_cast<unsigned char>('e')] = 9;
+        frequencies[static_cast<unsigned char>('f')] = 5;
+        return frequencies;
     }
 
     // -----------------------------------------------------------------------------
@@ -359,9 +384,10 @@ namespace
             countFrequencies("frequency_empty", "")
         };
 
-        expect(
-            frequencies.empty(),
-            "Expected no entries for an empty file"
+        expectEqual(
+            countNonZeroFrequencies(frequencies),
+            std::size_t{0},
+            "Expected every frequency to be zero for an empty file"
         ); });
 
         suite.run("single character is counted once", []
@@ -371,13 +397,13 @@ namespace
         };
 
         expectEqual(
-            frequencies.size(),
+            countNonZeroFrequencies(frequencies),
             std::size_t{1},
             "Expected exactly one unique character"
         );
 
         expectEqual(
-            frequencies.at('x'),
+            frequencyOf(frequencies, static_cast<unsigned char>('x')),
             uint64_t{1},
             "Expected x to have frequency 1"
         ); });
@@ -389,13 +415,13 @@ namespace
         };
 
         expectEqual(
-            frequencies.size(),
+            countNonZeroFrequencies(frequencies),
             std::size_t{1},
             "Expected exactly one unique character"
         );
 
         expectEqual(
-            frequencies.at('a'),
+            frequencyOf(frequencies, static_cast<unsigned char>('a')),
             uint64_t{7},
             "Expected a to have frequency 7"
         ); });
@@ -407,25 +433,25 @@ namespace
         };
 
         expectEqual(
-            frequencies.size(),
+            countNonZeroFrequencies(frequencies),
             std::size_t{3},
             "Expected three unique characters"
         );
 
         expectEqual(
-            frequencies.at('a'),
+            frequencyOf(frequencies, static_cast<unsigned char>('a')),
             uint64_t{3},
             "Expected a to have frequency 3"
         );
 
         expectEqual(
-            frequencies.at('b'),
+            frequencyOf(frequencies, static_cast<unsigned char>('b')),
             uint64_t{2},
             "Expected b to have frequency 2"
         );
 
         expectEqual(
-            frequencies.at('c'),
+            frequencyOf(frequencies, static_cast<unsigned char>('c')),
             uint64_t{1},
             "Expected c to have frequency 1"
         ); });
@@ -440,25 +466,25 @@ namespace
         };
 
         expectEqual(
-            frequencies.at('a'),
+            frequencyOf(frequencies, static_cast<unsigned char>('a')),
             uint64_t{2},
             "Expected a to have frequency 2"
         );
 
         expectEqual(
-            frequencies.at(' '),
+            frequencyOf(frequencies, static_cast<unsigned char>(' ')),
             uint64_t{1},
             "Expected one space"
         );
 
         expectEqual(
-            frequencies.at('\t'),
+            frequencyOf(frequencies, static_cast<unsigned char>('\t')),
             uint64_t{1},
             "Expected one tab"
         );
 
         expectEqual(
-            frequencies.at('b'),
+            frequencyOf(frequencies, static_cast<unsigned char>('b')),
             uint64_t{1},
             "Expected b to have frequency 1"
         ); });
@@ -473,31 +499,31 @@ namespace
         };
 
         expectEqual(
-            frequencies.size(),
+            countNonZeroFrequencies(frequencies),
             std::size_t{4},
             "Expected four unique characters"
         );
 
         expectEqual(
-            frequencies.at('A'),
+            frequencyOf(frequencies, static_cast<unsigned char>('A')),
             uint64_t{2},
             "Expected A to have frequency 2"
         );
 
         expectEqual(
-            frequencies.at('1'),
+            frequencyOf(frequencies, static_cast<unsigned char>('1')),
             uint64_t{2},
             "Expected 1 to have frequency 2"
         );
 
         expectEqual(
-            frequencies.at('!'),
+            frequencyOf(frequencies, static_cast<unsigned char>('!')),
             uint64_t{1},
             "Expected ! to have frequency 1"
         );
 
         expectEqual(
-            frequencies.at('?'),
+            frequencyOf(frequencies, static_cast<unsigned char>('?')),
             uint64_t{1},
             "Expected ? to have frequency 1"
         ); });
@@ -512,24 +538,24 @@ namespace
         };
 
         expectEqual(
-            frequencies.at('a'),
+            frequencyOf(frequencies, static_cast<unsigned char>('a')),
             uint64_t{1},
             "Expected a to have frequency 1"
         );
 
         expectEqual(
-            frequencies.at('b'),
+            frequencyOf(frequencies, static_cast<unsigned char>('b')),
             uint64_t{1},
             "Expected b to have frequency 1"
         );
 
         expect(
-            frequencies.find('\n') != frequencies.end(),
+            frequencyOf(frequencies, static_cast<unsigned char>('\n')) != 0,
             "Newline character was removed from the input"
         );
 
         expectEqual(
-            frequencies.at('\n'),
+            frequencyOf(frequencies, static_cast<unsigned char>('\n')),
             uint64_t{2},
             "Expected two newline characters"
         ); });
@@ -550,10 +576,9 @@ namespace
 
         suite.run("two symbols both receive encodings", []
                   {
-        std::unordered_map<char, uint64_t> frequencies{
-            {'a', 1},
-            {'b', 1}
-        };
+        std::array<uint64_t, 256> frequencies{};
+        frequencies[static_cast<unsigned char>('a')] = 1;
+        frequencies[static_cast<unsigned char>('b')] = 1;
 
         HuffmanTree tree{frequencies};
         const auto encodings{tree.getEncodings()};
@@ -614,11 +639,9 @@ namespace
 
         suite.run("zero-frequency symbols are ignored", []
                   {
-        std::unordered_map<char, uint64_t> frequencies{
-            {'a', 3},
-            {'b', 2},
-            {'z', 0}
-        };
+        std::array<uint64_t, 256> frequencies{};
+        frequencies[static_cast<unsigned char>('a')] = 3;
+        frequencies[static_cast<unsigned char>('b')] = 2;
 
         HuffmanTree tree{frequencies};
         const auto encodings{tree.getEncodings()};
@@ -655,7 +678,18 @@ namespace
 
         uint64_t weightedCost{0};
 
-        for (const auto& [character, frequency] : frequencies) {
+        for (std::size_t i{0}; i < frequencies.size(); ++i)
+        {
+            const uint64_t frequency{frequencies[i]};
+
+            if (frequency == 0)
+            {
+                continue;
+            }
+
+            const char character{
+                static_cast<char>(static_cast<unsigned char>(i))};
+
             weightedCost += frequency * encodings.at(character).size();
         }
 
@@ -667,9 +701,8 @@ namespace
 
         suite.run("single-symbol input receives a usable code", []
                   {
-        std::unordered_map<char, uint64_t> frequencies{
-            {'x', 10}
-        };
+        std::array<uint64_t, 256> frequencies{};
+        frequencies[static_cast<unsigned char>('x')] = 10;
 
         HuffmanTree tree{frequencies};
         const auto encodings{tree.getEncodings()};
@@ -711,7 +744,7 @@ namespace
 
         suite.run("empty tree serializes to no bytes", []
                   {
-        std::unordered_map<char, uint64_t> frequencies;
+        std::array<uint64_t, 256> frequencies{};
 
         const auto bytes{
             serializeTree("serialize_empty", frequencies)
@@ -724,9 +757,8 @@ namespace
 
         suite.run("single leaf writes marker followed by unaligned character byte", []
                   {
-        std::unordered_map<char, uint64_t> frequencies{
-            {'a', 3}
-        };
+        std::array<uint64_t, 256> frequencies{};
+        frequencies[static_cast<unsigned char>('a')] = 3;
 
         const auto bytes{
             serializeTree("serialize_single_leaf", frequencies)
@@ -740,10 +772,9 @@ namespace
 
         suite.run("two-leaf tree serializes in preorder", []
                   {
-        std::unordered_map<char, uint64_t> frequencies{
-            {'a', 1},
-            {'b', 2}
-        };
+        std::array<uint64_t, 256> frequencies{};
+        frequencies[static_cast<unsigned char>('a')] = 1;
+        frequencies[static_cast<unsigned char>('b')] = 2;
 
         const auto bytes{
             serializeTree("serialize_two_leaf", frequencies)

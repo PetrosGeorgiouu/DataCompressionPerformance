@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <fstream>
 #include <stdexcept>
+#include <array>
 #include "huffman/FrequencyTable.hpp"
 #include "huffman/HuffmanTree.hpp"
 #include "huffman/BitWriter.hpp"
@@ -20,7 +21,7 @@ void compressor(const string &inputPath, const string &outputPath)
     }
 
     // Find the character frequencies in the .txt file
-    unordered_map<char, uint64_t> freqs = findFrequencies(inputPath);
+    array<uint64_t, 256> freqs = findFrequencies(inputPath);
     // Obtain the Huffman tree and encodings
     HuffmanTree tree(freqs);
     unordered_map<char, string> encodings = tree.getEncodings();
@@ -33,9 +34,9 @@ void compressor(const string &inputPath, const string &outputPath)
     const std::uint8_t version = 1;
     outputFile.write(reinterpret_cast<const char *>(&version), sizeof(version));
     uint64_t total = 0;
-    for (const auto &kv : freqs)
+    for (int i = 0; i < 256; i++)
     {
-        total += kv.second;
+        total += freqs[i];
     }
     outputFile.write(reinterpret_cast<const char *>(&total), sizeof(total));
     tree.serialize(writer);
