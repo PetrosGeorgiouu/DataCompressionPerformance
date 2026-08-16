@@ -23,44 +23,64 @@ HEADERS := include/huffman/FrequencyTable.hpp \
 
 TESTS := tests/tests.cpp
 
-FILE ?=
+INPUT ?=
+OUTPUT ?=
 CORPUS_DIR ?= data/corpus
 BENCH_ARGS ?=
 
 BENCHMARK_INCLUDE := $(HOME)/benchmark/include
 BENCHMARK_LIB := $(HOME)/benchmark/build-release/src/libbenchmark.a
 
-build/fileperf: apps/fileperf.cpp $(SOURCES) $(HEADERS)
+build/huff: apps/huff.cpp $(SOURCES) $(HEADERS)
 	mkdir -p build
-	$(CXX) $(CXXFLAGS) -I$(BENCHMARK_INCLUDE) apps/fileperf.cpp $(SOURCES) \
+	$(CXX) $(CXXFLAGS) apps/huff.cpp $(SOURCES) \
+		-o build/huff
+
+
+build/huff_profiler: apps/huff_profiler.cpp $(SOURCES) $(HEADERS)
+	mkdir -p build
+	$(CXX) $(CXXFLAGS) -I$(BENCHMARK_INCLUDE) apps/huff_profiler.cpp $(SOURCES) \
 		$(BENCHMARK_LIB) -lpthread \
-		-o build/fileperf
+		-o build/huff_profiler
+
 
 build/corpus: apps/corpus.cpp $(SOURCES) $(HEADERS)
 	mkdir -p build
-	$(CXX) $(CXXFLAGS) apps/corpus.cpp $(SOURCES) -o build/corpus
+	$(CXX) $(CXXFLAGS) apps/corpus.cpp $(SOURCES) \
+		-o build/corpus
+
 
 build/tests: $(TESTS) $(SOURCES) $(HEADERS)
 	mkdir -p build
-	$(CXX) $(CXXFLAGS) $(TESTS) $(SOURCES) -o build/tests
+	$(CXX) $(CXXFLAGS) $(TESTS) $(SOURCES) \
+		-o build/tests
 
-build: build/fileperf build/corpus
 
-fileperf: build/fileperf
-	@if [ -z "$(FILE)" ]; then \
-		echo "Usage: make fileperf FILE=path/to/input.txt"; \
+build: build/huff_profiler build/corpus build/tests
+
+compress: build/huff
+	@if [ -z "$(INPUT)" ] || [ -z "$(OUTPUT)" ]; then \
+		echo "Usage: make compress INPUT=<input-file> OUTPUT=<output-file>"; \
 		exit 1; \
 	fi
-	./build/fileperf "$(FILE)" $(BENCH_ARGS)
+	./build/huff "$(INPUT)" "$(OUTPUT)"
+
+
+profile: build/huff_profiler
+	./build/huff_profiler $(BENCH_ARGS)
+
 
 corpus: build/corpus
 	./build/corpus "$(CORPUS_DIR)"
+
 
 tests: build/tests
 	mkdir -p build/test_output
 	./build/tests
 
+
 clean:
 	rm -rf build
 
-.PHONY: build fileperf corpus tests clean
+
+.PHONY: build compress profile corpus tests clean

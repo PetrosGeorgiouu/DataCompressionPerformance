@@ -1,8 +1,6 @@
 #include <ostream>
 #include <unordered_map>
 #include <fstream>
-#include <filesystem>
-#include <iostream>
 #include <stdexcept>
 #include "huffman/FrequencyTable.hpp"
 #include "huffman/HuffmanTree.hpp"
@@ -13,8 +11,6 @@ using namespace std;
 
 void compressor(const string &inputPath, const string &outputPath)
 {
-    namespace fs = std::filesystem;
-
     ofstream outputFile(outputPath, ios::binary | ios::trunc);
 
     if (!outputFile)
@@ -85,6 +81,4 @@ void compressor(const string &inputPath, const string &outputPath)
         throw runtime_error(
             "Failed to close output file: " + outputPath);
     }
-
-    std::cout << "Compressed file created at: " << fs::absolute(outputPath) << '\n';
 }
