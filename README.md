@@ -72,10 +72,35 @@ Toolchain:
   Compiler flags: -std=c++17 -O2 -Wall -Wextra -Wpedantic
 ```
 
+You can reference this as
+
+| Component | Value |
+|---|---:|
+| CPU cores | 4 |
+| CPU frequency | ~1996.65 MHz |
+| L1 Data Cache | 48 KiB × 4 |
+| L1 Instruction Cache | 32 KiB × 4 |
+| L2 Cache | 512 KiB × 4 |
+| L3 Cache | 6144 KiB shared |
+
+### Baseline Results
+
 First, let's discuss a constant baseline template for how we will measure if performance actually improved. I use the make command listed above to calculate the latencies on each run.
 
 This is our official, first implementation report on the latencies found.
 
+| Metric | Result |
+|---|---:|
+| Median wall-clock latency | **803.674 ms** |
+| Mean wall-clock latency | **801.442 ms** |
+| Best observed latency | **778.999 ms** |
+| Standard deviation | **9.525 ms** |
+| Coefficient of variation | **1.19%** |
+| Median CPU time | **801.668 ms** |
+| Mean CPU time | **799.470 ms** |
+| Median throughput | **17.750 MiB/s** |
+| Mean throughput | **17.802 MiB/s** |
+| Peak observed throughput | **18.312 MiB/s** |
 
 ## Acknowledgments
 
