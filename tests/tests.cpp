@@ -7,7 +7,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -334,19 +333,40 @@ namespace
                    possiblePrefix) == 0;
     }
 
-    bool isPrefixFree(
-        const std::unordered_map<char, std::string> &encodings)
+    std::size_t countNonEmptyEncodings(
+        const std::array<std::string, 256> &encodings)
     {
-        for (const auto &[firstCharacter, firstCode] : encodings)
+        std::size_t count{0};
+
+        for (const auto &encoding : encodings)
         {
-            for (const auto &[secondCharacter, secondCode] : encodings)
+            if (!encoding.empty())
             {
-                if (firstCharacter == secondCharacter)
+                ++count;
+            }
+        }
+
+        return count;
+    }
+
+    bool isPrefixFree(
+        const std::array<std::string, 256> &encodings)
+    {
+        for (std::size_t i{0}; i < encodings.size(); ++i)
+        {
+            if (encodings[i].empty())
+            {
+                continue;
+            }
+
+            for (std::size_t j{0}; j < encodings.size(); ++j)
+            {
+                if (i == j || encodings[j].empty())
                 {
                     continue;
                 }
 
-                if (isPrefixOf(firstCode, secondCode))
+                if (isPrefixOf(encodings[i], encodings[j]))
                 {
                     return false;
                 }
@@ -584,29 +604,19 @@ namespace
         const auto encodings{tree.getEncodings()};
 
         expectEqual(
-            encodings.size(),
+            countNonEmptyEncodings(encodings),
             std::size_t{2},
             "Expected two encodings"
         );
 
         expect(
-            encodings.find('a') != encodings.end(),
+            !encodings[static_cast<unsigned char>('a')].empty(),
             "Missing encoding for a"
         );
 
         expect(
-            encodings.find('b') != encodings.end(),
+            !encodings[static_cast<unsigned char>('b')].empty(),
             "Missing encoding for b"
-        );
-
-        expect(
-            !encodings.at('a').empty(),
-            "Encoding for a should not be empty"
-        );
-
-        expect(
-            !encodings.at('b').empty(),
-            "Encoding for b should not be empty"
         ); });
 
         suite.run("encodings contain only zeroes and ones", []
@@ -616,8 +626,12 @@ namespace
         HuffmanTree tree{frequencies};
         const auto encodings{tree.getEncodings()};
 
-        for (const auto& [character, encoding] : encodings) {
-            static_cast<void>(character);
+        for (const auto &encoding : encodings)
+        {
+            if (encoding.empty())
+            {
+                continue;
+            }
 
             expect(
                 containsOnlyBinaryDigits(encoding),
@@ -647,13 +661,13 @@ namespace
         const auto encodings{tree.getEncodings()};
 
         expectEqual(
-            encodings.size(),
+            countNonEmptyEncodings(encodings),
             std::size_t{2},
             "Expected only positive-frequency symbols"
         );
 
         expect(
-            encodings.find('z') == encodings.end(),
+            encodings[static_cast<unsigned char>('z')].empty(),
             "Zero-frequency symbol z should not receive an encoding"
         ); });
 
@@ -665,7 +679,8 @@ namespace
         const auto encodings{tree.getEncodings()};
 
         expect(
-            encodings.at('a').size() <= encodings.at('f').size(),
+            encodings[static_cast<unsigned char>('a')].size() <=
+                encodings[static_cast<unsigned char>('f')].size(),
             "Most-common symbol received a longer code than rarest symbol"
         ); });
 
@@ -687,10 +702,7 @@ namespace
                 continue;
             }
 
-            const char character{
-                static_cast<char>(static_cast<unsigned char>(i))};
-
-            weightedCost += frequency * encodings.at(character).size();
+            weightedCost += frequency * encodings[i].size();
         }
 
         expectEqual(
@@ -708,23 +720,19 @@ namespace
         const auto encodings{tree.getEncodings()};
 
         expectEqual(
-            encodings.size(),
+            countNonEmptyEncodings(encodings),
             std::size_t{1},
             "Expected exactly one encoding"
         );
 
         expect(
-            encodings.find('x') != encodings.end(),
+            !encodings[static_cast<unsigned char>('x')].empty(),
             "Missing encoding for x"
         );
 
         expect(
-            !encodings.at('x').empty(),
-            "A single-symbol alphabet must receive a non-empty code"
-        );
-
-        expect(
-            containsOnlyBinaryDigits(encodings.at('x')),
+            containsOnlyBinaryDigits(
+                encodings[static_cast<unsigned char>('x')]),
             "Single-symbol encoding must contain only 0 and 1"
         ); });
 

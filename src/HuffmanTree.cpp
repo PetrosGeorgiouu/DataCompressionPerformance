@@ -68,14 +68,14 @@ HuffmanTree::HuffmanTree(array <uint64_t, 256> &freqs)
 }
 
 void HuffmanTree::getEncodingsHelper(const Node *node, string str,
-                                     unordered_map<char, string> &encodings)
+                                     array<string, 256> &encodings)
 {
   if (node == nullptr)
     return;
 
   if (!node->left && !node->right)
   {
-    encodings[node->ch] = str;
+    encodings[static_cast<unsigned char>(node->ch)] = str;
   }
 
   getEncodingsHelper(node->left, str + "0", encodings);
@@ -110,16 +110,16 @@ void HuffmanTree::serializeHelper(BitWriter &bitWriter, Node *current)
   }
 }
 
-unordered_map<char, string> HuffmanTree::getEncodings()
+array<string, 256> HuffmanTree::getEncodings()
 {
-  unordered_map<char, string> encodingTable;
+  array<string, 256> encodingTable = {};
   if (this->root == nullptr)
   {
     return encodingTable;
   }
   if (this->root->left == nullptr && this->root->right == nullptr)
   {
-    encodingTable[this->root->ch] = "0";
+    encodingTable[static_cast<unsigned char>(this->root->ch)] = "0";
   }
   else
   {

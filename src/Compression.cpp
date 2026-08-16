@@ -24,7 +24,7 @@ void compressor(const string &inputPath, const string &outputPath)
     array<uint64_t, 256> freqs = findFrequencies(inputPath);
     // Obtain the Huffman tree and encodings
     HuffmanTree tree(freqs);
-    unordered_map<char, string> encodings = tree.getEncodings();
+    array<string, 256> encodings = tree.getEncodings();
 
     // Initialize Bitwriter
     BitWriter writer(outputFile);
@@ -53,7 +53,7 @@ void compressor(const string &inputPath, const string &outputPath)
     char c;
     while (file.get(c))
     {
-        string encoded = encodings[c];
+        const string &encoded = encodings[static_cast<unsigned char>(c)];
         for (char bit : encoded)
         {
             if (bit == '0')

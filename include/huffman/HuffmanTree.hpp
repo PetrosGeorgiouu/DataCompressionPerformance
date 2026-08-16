@@ -20,7 +20,7 @@ public:
   HuffmanTree(const HuffmanTree &) = delete;
   HuffmanTree &operator=(const HuffmanTree &) = delete;
 
-  unordered_map<char, string> getEncodings();
+  array <string, 256> getEncodings();
 
   void serialize(BitWriter &bitWriter);
 
@@ -32,7 +32,7 @@ private:
   void getEncodingsHelper(
       const Node *node,
       string code,
-      unordered_map<char, string> &encodings);
+      array <string, 256> &encodings);
 
   void deleteHelper(Node *node);
 
