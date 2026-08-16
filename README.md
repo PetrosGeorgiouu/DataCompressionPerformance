@@ -121,7 +121,6 @@ We use this to measure the results of statistics based on the most recent change
 | Mean throughput | **18.512 MiB/s** |
 | Peak observed throughput | **18.718 MiB/s** |
 
-- 
 
 ## Acknowledgments
 
