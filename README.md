@@ -106,7 +106,7 @@ This is our official, first implementation report on the statistics found.
 
 We use this to measure the results of statistics based on the most recent change made. I'll include what we changed most recently also.
 
-- August 16th, 2026: frequencyCounter now returns the table as a array<uint64_t, 256> data type. Here is the current performance result.
+- August 16th, 2026: frequencyCounter now returns the table as a array<uint64_t, 256> data type.
 
 | Metric | Result |
 |---|---:|
