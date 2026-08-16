@@ -10,20 +10,26 @@ Build the executable and create the directory used to store it:
 ```bash
 make build
 ```
-
-Run the executable:
+Here's how to use the compressor.
 
 ```bash
-make run
+make compress \
+  INPUT= [input file path] \
+  OUTPUT= [output file path]
 ```
-
-The program reports the execution time and corresponding throughput for each stage.
+This takes a txt file from the input file path, compresses it, and stores it in the output file path. Note: both must exist for the compressor to succeed.
 
 You can also run its test cases with:
 
 ```bash
 make tests
 ```
+After each implementation improvement, I use
+
+```bash
+make profile BENCH_ARGS="--benchmark_filter=BM_CompressFile --benchmark_repetitions=30"
+```
+to run the compressor 30 times on "data/corpus/complete_project_gutenberg_works_of_george_meredith.txt" to measure performance. We will discuss this later.
 
 After testing, remove the generated build directory and its contents:
 
@@ -66,19 +72,10 @@ Toolchain:
   Compiler flags: -std=c++17 -O2 -Wall -Wextra -Wpedantic
 ```
 
-First, let's discuss a constant baseline template for how we will measure if performance actually improved. I use the make command
+First, let's discuss a constant baseline template for how we will measure if performance actually improved. I use the make command listed above to calculate the latencies on each run.
 
-```bash
-make fileperf     FILE=data/corpus/complete_project_gutenberg_works_of_george_meredith.txt     BENCH_ARGS="--benchmark_repetitions=30 --benchmark_report_aggregates_only=true"~
-```
+This is our official, first implementation report on the latencies found.
 
-We use Linux perf tools to simulate over 2000 CPU clock samples, and an obvious bottleneck occurred in our naive implementation of frequency counting. It consumed 95.1% of the sampled CPU time. In particular, we notice these major performance issues.
-
-- 32.1% of that was contributed to a hotspot that occurred due to the per byte extraction obtained using ```std::istream::get```, meaning that reading one character at a time became extremely expensive.
-- 12.78% of consumption was attributed to ```std::istream::sentry``` every time we used the ```get()``` call.
-- Some noticeable issues are that worth observing are those concerning caches. In particular, using an ```unordered_map<char, uint64_t>``` data structure for storing frequencies is not cache friendly, or trivial to compute. We take a ```char```, hash it, retrieve it from an arbitrary array index, and then perform pointer chasing if collisions exist. Thus, we are not leveraging our cache properly.
-
-\[Soon to write about optimizing frequency counting.\]
 
 ## Acknowledgments
 
