@@ -22,6 +22,13 @@ You can also run its test cases with:
 ```bash
 make tests
 ```
+After finishing the compressor, I used
+
+```bash
+make corpus
+```
+to measure how well our compressor compressed a corpus of 11 text files.
+
 After each implementation improvement, I use
 
 ```bash
