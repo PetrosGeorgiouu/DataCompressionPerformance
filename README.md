@@ -112,20 +112,20 @@ This is our official, first implementation report on the statistics found.
 We use this to measure the results of statistics based on the most recent change made. I'll include what we changed most recently also.
 
 - August 16th, 2026: frequencyCounter now returns the table as a array<uint64_t, 256> data type and not an unordered_map<char, uint64_t>. getEncodings now returns the table as a array<string, 256> data type and not an unordered_map<char, string>.
-- August 18th, 2026: frequencyCounter now reads a buffer of size 4096 of characters from the file instead of one character at a time.
+- August 18th, 2026: frequencyCounter now reads a buffer of size 4096 of characters from the file instead of one character at a time. Compression now also reads a buffer of size 4096.
 
 | Metric | Result |
 |---|---:|
-| Median wall-clock latency | **469.219 ms** |
-| Mean wall-clock latency | **470.663 ms** |
-| Best observed latency | **465.642 ms** |
-| Standard deviation | **4.954 ms** |
-| Coefficient of variation | **1.05%** |
-| Median CPU time | **466.443 ms** |
-| Mean CPU time | **468.147 ms** |
-| Median throughput | **30.402 MiB/s** |
-| Mean throughput | **30.312 MiB/s** |
-| Peak observed throughput | **30.635 MiB/s** |
+| Median wall-clock latency | **351.619 ms** |
+| Mean wall-clock latency | **354.212 ms** |
+| Best observed latency | **345.783 ms** |
+| Standard deviation | **6.829 ms** |
+| Coefficient of variation | **1.93%** |
+| Median CPU time | **349.766 ms** |
+| Mean CPU time | **352.679 ms** |
+| Median throughput | **40.570 MiB/s** |
+| Mean throughput | **40.287 MiB/s** |
+| Peak observed throughput | **41.255 MiB/s** |
 
 
 ## Acknowledgments

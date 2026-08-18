@@ -50,19 +50,23 @@ void compressor(const string &inputPath, const string &outputPath)
 
     // Begin writing encoded data
     ifstream file(inputPath, ios::binary);
-    char c;
-    while (file.get(c))
-    {
-        const string &encoded = encodings[static_cast<unsigned char>(c)];
-        for (char bit : encoded)
-        {
-            if (bit == '0')
-            {
-                writer.writeBit(0);
-            }
-            else
-            {
-                writer.writeBit(1);
+
+    char buffer[4096];
+    while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0) {
+        streamsize count = file.gcount();
+        for (streamsize i = 0; i < count; i++) {
+            char c = buffer[i];
+            const string &encoded = encodings[static_cast<unsigned char>(c)];
+            for (char bit : encoded)
+                {
+                if (bit == '0')
+                {
+                    writer.writeBit(0);
+                }
+                else
+                {
+                    writer.writeBit(1);
+                }
             }
         }
     }
