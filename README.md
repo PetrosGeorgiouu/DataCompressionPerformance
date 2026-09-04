@@ -113,6 +113,7 @@ We use this to measure the results of statistics based on the most recent change
 
 - August 16th, 2026: frequencyCounter now returns the table as a array<uint64_t, 256> data type and not an unordered_map<char, uint64_t>. getEncodings now returns the table as a array<string, 256> data type and not an unordered_map<char, string>.
 - August 18th, 2026: frequencyCounter now reads a buffer of size 4096 of characters from the file instead of one character at a time. Compression now also reads a buffer of size 4096.
+- September 4th, 2026: BitWriter now uses a 4096 size buffer to write an entire buffer of bytes into a bile instead of just one byte at a time.
 
 | Metric | Result |
 |---|---:|
