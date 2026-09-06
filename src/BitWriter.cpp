@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdint>
 #include <array>
+#include <algorithm>
 #include "huffman/BitWriter.hpp"
 
 using namespace std;
@@ -43,9 +44,58 @@ void BitWriter::writeBit(uint8_t bit)
 
 void BitWriter::writeByte(uint8_t byte)
 {
-    for (int i = 7; i >= 0; i--)
+    if (current_size == 0) {
+        bufferByte(byte);
+        return;
+    }
+    const uint8_t bits_left = current_size;
+    const uint8_t completed_byte = static_cast<uint8_t>((current_byte << (8 - bits_left)) | (byte >> bits_left));
+    const uint8_t remain_mask = static_cast<uint8_t>((uint16_t{1} << bits_left) - 1);
+    const uint8_t remainder = static_cast<uint8_t>(byte & remain_mask);
+    bufferByte(completed_byte);
+    current_byte = remainder;
+    current_size = bits_left;
+}
+
+void BitWriter::writeBits(uint64_t bytes, uint64_t size) {
+    assert(size <= 64);
+    assert(size == 64 || (bytes >> size) == 0);
+     while (size > 0)
     {
-        writeBit((byte >> i) & 1);
+        const uint64_t available{
+            8ULL - current_size
+        };
+
+        const uint64_t bitsToTake{
+            min(size, available)
+        };
+
+        // Select the next highest meaningful bits.
+        const uint64_t shift{
+            size - bitsToTake
+        };
+
+        const uint64_t mask{
+            (uint64_t{1} << bitsToTake) - 1
+        };
+
+        const uint64_t chunk{
+            (bytes >> shift) & mask
+        };
+
+        current_byte = static_cast<uint8_t>(
+            (static_cast<uint16_t>(current_byte) << bitsToTake) |
+            chunk);
+
+        current_size = static_cast<uint8_t>(
+            current_size + bitsToTake);
+
+        size -= bitsToTake;
+
+        if (current_size == 8)
+        {
+            bufferByte(current_byte);
+        }
     }
 }
 

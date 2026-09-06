@@ -305,42 +305,52 @@ namespace
     // Huffman helpers
     // -----------------------------------------------------------------------------
 
-    bool containsOnlyBinaryDigits(const std::string &encoding)
+    bool hasEncoding(const HuffmanTree::Encoding &encoding)
     {
-        for (char bit : encoding)
-        {
-            if (bit != '0' && bit != '1')
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return encoding.size != 0;
     }
 
-    bool isPrefixOf(
-        const std::string &possiblePrefix,
-        const std::string &value)
+    bool fitsDeclaredSize(const HuffmanTree::Encoding &encoding)
     {
-        if (possiblePrefix.size() > value.size())
+        if (encoding.size > 64)
         {
             return false;
         }
 
-        return value.compare(
-                   0,
-                   possiblePrefix.size(),
-                   possiblePrefix) == 0;
+        if (encoding.size == 64)
+        {
+            return true;
+        }
+
+        return encoding.encoding < (uint64_t{1} << encoding.size);
     }
 
-    std::size_t countNonEmptyEncodings(
-        const std::array<std::string, 256> &encodings)
+    bool isPrefixOf(
+        const HuffmanTree::Encoding &possiblePrefix,
+        const HuffmanTree::Encoding &value)
+    {
+        if (!hasEncoding(possiblePrefix) ||
+            !hasEncoding(value) ||
+            possiblePrefix.size > value.size)
+        {
+            return false;
+        }
+
+        const uint64_t trailingBits{
+            value.size - possiblePrefix.size};
+
+        return (value.encoding >> trailingBits) ==
+               possiblePrefix.encoding;
+    }
+
+    std::size_t countDefinedEncodings(
+        const std::array<HuffmanTree::Encoding, 256> &encodings)
     {
         std::size_t count{0};
 
         for (const auto &encoding : encodings)
         {
-            if (!encoding.empty())
+            if (hasEncoding(encoding))
             {
                 ++count;
             }
@@ -350,18 +360,18 @@ namespace
     }
 
     bool isPrefixFree(
-        const std::array<std::string, 256> &encodings)
+        const std::array<HuffmanTree::Encoding, 256> &encodings)
     {
         for (std::size_t i{0}; i < encodings.size(); ++i)
         {
-            if (encodings[i].empty())
+            if (!hasEncoding(encodings[i]))
             {
                 continue;
             }
 
             for (std::size_t j{0}; j < encodings.size(); ++j)
             {
-                if (i == j || encodings[j].empty())
+                if (i == j || !hasEncoding(encodings[j]))
                 {
                     continue;
                 }
@@ -604,22 +614,22 @@ namespace
         const auto encodings{tree.getEncodings()};
 
         expectEqual(
-            countNonEmptyEncodings(encodings),
+            countDefinedEncodings(encodings),
             std::size_t{2},
             "Expected two encodings"
         );
 
         expect(
-            !encodings[static_cast<unsigned char>('a')].empty(),
+            hasEncoding(encodings[static_cast<unsigned char>('a')]),
             "Missing encoding for a"
         );
 
         expect(
-            !encodings[static_cast<unsigned char>('b')].empty(),
+            hasEncoding(encodings[static_cast<unsigned char>('b')]),
             "Missing encoding for b"
         ); });
 
-        suite.run("encodings contain only zeroes and ones", []
+        suite.run("encodings fit within their declared bit lengths", []
                   {
         auto frequencies{classicFrequencies()};
 
@@ -628,14 +638,14 @@ namespace
 
         for (const auto &encoding : encodings)
         {
-            if (encoding.empty())
+            if (!hasEncoding(encoding))
             {
                 continue;
             }
 
             expect(
-                containsOnlyBinaryDigits(encoding),
-                "An encoding contained a character other than 0 or 1"
+                fitsDeclaredSize(encoding),
+                "An encoding uses bits outside its declared size"
             );
         } });
 
@@ -661,13 +671,13 @@ namespace
         const auto encodings{tree.getEncodings()};
 
         expectEqual(
-            countNonEmptyEncodings(encodings),
+            countDefinedEncodings(encodings),
             std::size_t{2},
             "Expected only positive-frequency symbols"
         );
 
         expect(
-            encodings[static_cast<unsigned char>('z')].empty(),
+            !hasEncoding(encodings[static_cast<unsigned char>('z')]),
             "Zero-frequency symbol z should not receive an encoding"
         ); });
 
@@ -679,8 +689,8 @@ namespace
         const auto encodings{tree.getEncodings()};
 
         expect(
-            encodings[static_cast<unsigned char>('a')].size() <=
-                encodings[static_cast<unsigned char>('f')].size(),
+            encodings[static_cast<unsigned char>('a')].size <=
+                encodings[static_cast<unsigned char>('f')].size,
             "Most-common symbol received a longer code than rarest symbol"
         ); });
 
@@ -702,7 +712,7 @@ namespace
                 continue;
             }
 
-            weightedCost += frequency * encodings[i].size();
+            weightedCost += frequency * encodings[i].size;
         }
 
         expectEqual(
@@ -720,20 +730,30 @@ namespace
         const auto encodings{tree.getEncodings()};
 
         expectEqual(
-            countNonEmptyEncodings(encodings),
+            countDefinedEncodings(encodings),
             std::size_t{1},
             "Expected exactly one encoding"
         );
 
         expect(
-            !encodings[static_cast<unsigned char>('x')].empty(),
+            hasEncoding(encodings[static_cast<unsigned char>('x')]),
             "Missing encoding for x"
         );
 
-        expect(
-            containsOnlyBinaryDigits(
-                encodings[static_cast<unsigned char>('x')]),
-            "Single-symbol encoding must contain only 0 and 1"
+        const auto &encoding{
+            encodings[static_cast<unsigned char>('x')]
+        };
+
+        expectEqual(
+            encoding.size,
+            uint64_t{1},
+            "Single-symbol encoding must contain one bit"
+        );
+
+        expectEqual(
+            encoding.encoding,
+            uint64_t{0},
+            "Single-symbol encoding should be the bit 0"
         ); });
 
         suite.printSummary();
@@ -914,6 +934,132 @@ namespace
             std::vector<uint8_t>{0xAA, 0x80},
             "Expected bytes 0xAA and 0x80"
         ); });
+
+        suite.run("writeBits with zero length writes nothing", []
+                  {
+        const auto bytes{
+            writeWithBitWriter(
+                "bitwriter_write_bits_empty",
+                [](BitWriter &writer)
+                {
+                    writer.writeBits(0, 0);
+                }
+            )
+        };
+
+        expect(
+            bytes.empty(),
+            "A zero-length encoding should not write any bits"
+        ); });
+
+        suite.run("writeBits preserves leading zeroes", []
+                  {
+        const auto bytes{
+            writeWithBitWriter(
+                "bitwriter_write_bits_leading_zeroes",
+                [](BitWriter &writer)
+                {
+                    // Integer 1 with size 3 represents the encoding 001.
+                    writer.writeBits(0b001, 3);
+                }
+            )
+        };
+
+        expectEqual(
+            bytes,
+            std::vector<uint8_t>{0x20},
+            "Expected encoding 001 to be padded to 00100000"
+        ); });
+
+        suite.run("writeBits writes an aligned complete byte", []
+                  {
+        const auto bytes{
+            writeWithBitWriter(
+                "bitwriter_write_bits_aligned_byte",
+                [](BitWriter &writer)
+                {
+                    writer.writeBits(0xA5, 8);
+                }
+            )
+        };
+
+        expectEqual(
+            bytes,
+            std::vector<uint8_t>{0xA5},
+            "Expected eight bulk-written bits to produce 0xA5"
+        ); });
+
+        suite.run("writeBits calls remain contiguous across a byte boundary", []
+                  {
+        const auto bytes{
+            writeWithBitWriter(
+                "bitwriter_write_bits_cross_boundary",
+                [](BitWriter &writer)
+                {
+                    writer.writeBits(0b101, 3);
+                    writer.writeBits(0b110011, 6);
+                }
+            )
+        };
+
+        expectEqual(
+            bytes,
+            std::vector<uint8_t>{0xB9, 0x80},
+            "Expected contiguous stream 101110011 padded to B9 80"
+        ); });
+
+        suite.run("writeBits supports the full 64-bit input width", []
+                  {
+        const auto bytes{
+            writeWithBitWriter(
+                "bitwriter_write_bits_64",
+                [](BitWriter &writer)
+                {
+                    writer.writeBits(
+                        UINT64_C(0x0123456789ABCDEF),
+                        64);
+                }
+            )
+        };
+
+        expectEqual(
+            bytes,
+            std::vector<uint8_t>{
+                0x01, 0x23, 0x45, 0x67,
+                0x89, 0xAB, 0xCD, 0xEF
+            },
+            "Expected all 64 bits to be written most-significant byte first"
+        ); });
+
+        suite.run("writeBits crosses the output-buffer boundary", []
+                  {
+        const auto bytes{
+            writeWithBitWriter(
+                "bitwriter_write_bits_buffer_boundary",
+                [](BitWriter &writer)
+                {
+                    for (std::size_t i{0}; i < 4097; ++i)
+                    {
+                        writer.writeBits(0xA5, 8);
+                    }
+                }
+            )
+        };
+
+        expectEqual(
+            bytes.size(),
+            std::size_t{4097},
+            "Expected every byte on both sides of the buffer flush"
+        );
+
+        for (uint8_t byte : bytes)
+        {
+            expectEqual(
+                byte,
+                uint8_t{0xA5},
+                "A byte was corrupted while crossing the buffer boundary"
+            );
+        } });
 
         suite.run("aligned writeByte writes the byte unchanged", []
                   {

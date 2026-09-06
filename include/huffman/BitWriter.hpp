@@ -13,6 +13,7 @@ public:
     ~BitWriter();
     void writeBit(uint8_t bit);
     void writeByte(uint8_t byte);
+    void writeBits(uint64_t bytes, uint64_t size);
     void flush();
 
 private:

@@ -67,19 +67,19 @@ HuffmanTree::HuffmanTree(array <uint64_t, 256> &freqs)
   this->root = pq.top();
 }
 
-void HuffmanTree::getEncodingsHelper(const Node *node, string str,
-                                     array<string, 256> &encodings)
+void HuffmanTree::getEncodingsHelper(const Node *node, uint64_t code, uint64_t size,
+    array<Encoding, 256> &encodings)
 {
   if (node == nullptr)
     return;
 
   if (!node->left && !node->right)
   {
-    encodings[static_cast<unsigned char>(node->ch)] = str;
+    encodings[static_cast<unsigned char>(node->ch)] = Encoding(code, size);
   }
 
-  getEncodingsHelper(node->left, str + "0", encodings);
-  getEncodingsHelper(node->right, str + "1", encodings);
+  getEncodingsHelper(node->left, static_cast<uint64_t>((code << 1) | 0ULL), size + 1, encodings);
+  getEncodingsHelper(node->right, static_cast<uint64_t>((code << 1) | 1ULL), size + 1, encodings);
 }
 
 void HuffmanTree::deleteHelper(Node *node)
@@ -110,20 +110,20 @@ void HuffmanTree::serializeHelper(BitWriter &bitWriter, Node *current)
   }
 }
 
-array<string, 256> HuffmanTree::getEncodings()
+array<HuffmanTree::Encoding, 256> HuffmanTree::getEncodings()
 {
-  array<string, 256> encodingTable = {};
+  array<Encoding, 256> encodingTable = {};
   if (this->root == nullptr)
   {
     return encodingTable;
   }
   if (this->root->left == nullptr && this->root->right == nullptr)
   {
-    encodingTable[static_cast<unsigned char>(this->root->ch)] = "0";
+    encodingTable[static_cast<unsigned char>(this->root->ch)] = HuffmanTree::Encoding(0, 1);
   }
   else
   {
-    getEncodingsHelper(this->root, "", encodingTable);
+    getEncodingsHelper(this->root, 0, 0, encodingTable);
   }
   return encodingTable;
 }
